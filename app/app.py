@@ -361,19 +361,38 @@ def generate_acknowledgment(cur, app_id):
     pdf.cell(0, 8, "Old Age Pension Scheme - Acknowledgment", ln=1, align="C")
     pdf.ln(4)
     # decorative border, as per approved letterhead design
-    for i in range(0, 2000):
-        x = 10 + (i % 190)
-        pdf.line(x, 282, x + 0.5, 282)
-        pdf.line(x, 12, x + 0.5, 12)
+    pdf.set_line_width(0.5)
+    pdf.line(10, 12, 200, 12)
+    pdf.line(10, 282, 200, 282)
+
     labels = ["Application No", "Applicant Name", "Mobile", "Date of Birth",
               "Village", "Block", "Bank Account", "IFSC", "Submitted At", "Status"]
-    pdf.set_font("Helvetica", "", 10)
+    
+    # Check for available system Unicode font
+    for candidate in (
+        os.path.join(BASE_DIR, "fonts", "DejaVuSans.ttf"),
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "C:\\Windows\\Fonts\\arial.ttf",
+    ):
+        if os.path.exists(candidate):
+            try:
+                pdf.add_font("CustomUni", "", candidate)
+                pdf.set_font("CustomUni", "", 10)
+                break
+            except Exception:
+                pass
+    else:
+        pdf.set_font("Helvetica", "", 10)
+
     for label, val in zip(labels, row):
+        val_str = str(val) if val is not None else ""
         try:
             pdf.cell(60, 8, label, border=1)
-            pdf.cell(0, 8, str(val), border=1, ln=1)
+            pdf.cell(0, 8, val_str, border=1, ln=1)
         except Exception:
-            pdf.cell(0, 8, "?", border=1, ln=1)
+            safe_val = val_str.encode("latin-1", errors="replace").decode("latin-1")
+            pdf.cell(0, 8, safe_val, border=1, ln=1)
     pdf.ln(6)
     pdf.set_font("Helvetica", "I", 9)
     pdf.multi_cell(0, 5, "This is a computer generated acknowledgment. Processing SLA "
