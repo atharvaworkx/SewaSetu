@@ -409,7 +409,7 @@ def status_login():
 
 @app.route("/application/<int:app_id>")
 def view_application(app_id):
-    if not session.get("logged_in"):
+    if not session.get("logged_in") and not session.get("admin"):
         flash("Please login to view application status.")
         return redirect(url_for("status_login"))
     conn = get_db()
@@ -421,11 +421,33 @@ def view_application(app_id):
     cur.close(); conn.close()
     if not row:
         abort(404)
+    # IDOR ownership check: ensure citizen only accesses their own application
+    if not session.get("admin"):
+        portal_mobile = session.get("portal_mobile")
+        if not portal_mobile or row[2] != portal_mobile:
+            abort(403)
     return render_template("application.html", a=row, app_id=app_id)
 
 
 @app.route("/ack/<int:app_id>.pdf")
 def ack_pdf(app_id):
+    # Enforce authentication: prevent unauthenticated scrapers from downloading PII
+    if not session.get("logged_in") and not session.get("admin"):
+        abort(403)
+
+    # Verify ownership against application mobile
+    if not session.get("admin"):
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT mobile FROM applications WHERE id = %s", (app_id,))
+            row = cur.fetchone()
+            cur.close(); conn.close()
+            if row and session.get("portal_mobile") and row[0] != session.get("portal_mobile"):
+                abort(403)
+        except Exception:
+            pass
+
     path = os.path.join(UPLOAD_DIR, "ack", "%d.pdf" % app_id)
     if not os.path.exists(path):
         conn = get_db()
