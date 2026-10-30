@@ -149,9 +149,13 @@ def apply():
         return redirect(url_for("index"))
     if request.method == "POST":
         mobile = request.form.get("mobile", "").strip()
-        captcha = request.form.get("captcha", "")
+        captcha = request.form.get("captcha", "").strip()
+        expected_captcha = session.get("captcha_answer")
+        if not captcha or expected_captcha is None or str(captcha) != str(expected_captcha):
+            flash("Incorrect captcha answer. Please try again.")
+            return render_template("apply.html", captcha_q=make_captcha())
         if len(mobile) != 10 or not mobile.isdigit():
-            flash("Something went wrong. Please try again.")
+            flash("Please enter a valid 10-digit mobile number.")
             return render_template("apply.html", captcha_q=make_captcha())
         code = str(random.randint(100000, 999999))
         conn = get_db()
@@ -278,10 +282,8 @@ def handle_submission():
         flash("Something went wrong. Please try again.")
         return redirect(url_for("form_step", step=1))
 
-    if marital == "Widowed":
-        if not husband_name or not husband_employer:
-            flash("Something went wrong. Please try again.")
-            return redirect(url_for("form_step", step=1))
+    # For widowed applicants, husband's current employer is not applicable
+    # since the spouse is deceased. Do not reject valid widow applications.
 
     dob = parse_dob(dob_raw)
     if dob is None:
