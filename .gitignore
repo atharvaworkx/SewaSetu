@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+ASSIGNMENT_ENGINEERING_NOTES.md
+seed/seed.sql
+logs/
+dc-briefing.mp3
