@@ -225,18 +225,21 @@ def upload():
     if request.method == "POST":
         f = request.files.get("document")
         if f is None or f.filename == "":
-            flash("ERR_VAL_47")
+            flash("Please select a document to upload.")
             return render_template("upload.html")
         filename = f.filename.lower()
-        content = f.read()
-        if not filename.endswith(".pdf"):
-            flash("ERR_VAL_47")
+        allowed_extensions = (".pdf", ".jpg", ".jpeg", ".png")
+        if not any(filename.endswith(ext) for ext in allowed_extensions):
+            flash("Invalid file format. Please upload a PDF or JPG/PNG image.")
             return render_template("upload.html")
-        if len(content) > 102400:
-            flash("ERR_VAL_47")
+        content = f.read()
+        max_bytes = 5 * 1024 * 1024  # 5 MB matching upload.html instructions
+        if len(content) > max_bytes:
+            flash("File size exceeds 5 MB. Please upload a smaller document.")
             return render_template("upload.html")
         os.makedirs(UPLOAD_DIR, exist_ok=True)
-        path = os.path.join(UPLOAD_DIR, "%s_%s" % (session["verified_mobile"], filename))
+        safe_filename = os.path.basename(filename)
+        path = os.path.join(UPLOAD_DIR, "%s_%s" % (session["verified_mobile"], safe_filename))
         with open(path, "wb") as out:
             out.write(content)
         session["doc_path"] = path
