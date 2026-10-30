@@ -21,35 +21,10 @@ from datetime import date
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
 
 
+import app as app_module
+
 def parse_dob(dob_raw):
-    """
-    Mirror the date-parsing logic from handle_submission() so we can
-    test it without a full HTTP request.
-    """
-    from datetime import datetime
-    dob = None
-    for fmt in ("%m/%d/%Y", "%d/%m/%Y"):
-        try:
-            dob = datetime.strptime(dob_raw, fmt).date()
-            break
-        except ValueError:
-            continue
-    return dob
-
-
-def parse_dob_correct(dob_raw):
-    """
-    Correct version: DD/MM/YYYY first.
-    """
-    from datetime import datetime
-    dob = None
-    for fmt in ("%d/%m/%Y", "%m/%d/%Y"):
-        try:
-            dob = datetime.strptime(dob_raw, fmt).date()
-            break
-        except ValueError:
-            continue
-    return dob
+    return app_module.parse_dob(dob_raw)
 
 
 def test_date_04_06_1955_parsed_as_june_4_not_april_6():

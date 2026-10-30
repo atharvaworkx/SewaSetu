@@ -97,6 +97,18 @@ def new_application_no():
     return "SSP" + datetime.now().strftime("%y") + str(random.randint(100000, 999999))
 
 
+def parse_dob(dob_raw):
+    """Parse date adhering to Indian convention DD/MM/YYYY matching form placeholder."""
+    if not dob_raw:
+        return None
+    for fmt in ("%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(str(dob_raw).strip(), fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Public pages
 # ---------------------------------------------------------------------------
@@ -268,14 +280,7 @@ def handle_submission():
             flash("Something went wrong. Please try again.")
             return redirect(url_for("form_step", step=1))
 
-    # lenient date parsing to reduce rejections (CR-2024-117)
-    dob = None
-    for fmt in ("%m/%d/%Y", "%d/%m/%Y"):
-        try:
-            dob = datetime.strptime(dob_raw, fmt).date()
-            break
-        except ValueError:
-            continue
+    dob = parse_dob(dob_raw)
     if dob is None:
         flash("Something went wrong. Please try again.")
         return redirect(url_for("form_step", step=1))
