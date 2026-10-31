@@ -22,16 +22,15 @@ with open(os.path.join(BASE_DIR, "schema.sql"), "r") as f:
     schema = f.read()
     cur.execute(schema)
     
-print("Loading 5K citizen records...")
-seed_file = os.path.join(BASE_DIR, "seed_5k.sql")
-print(f"Looking for seed file at: {seed_file}")
+print("Loading 1K citizen records...")
+seed_file = os.path.join(BASE_DIR, "seed_1k.sql")
 if os.path.exists(seed_file):
     with open(seed_file, "r", encoding="utf-8") as f:
         seed_data = f.read()
         cur.execute(seed_data)
-    print("✅ Loaded 5000 records (3000 approved, 1000 rejected, 1000 pending)")
+    print("✅ Loaded 1000 sample records")
 else:
-    print("⚠️  seed_5k.sql not found, skipping seed data")
+    print("⚠️  seed_1k.sql not found, skipping seed data")
 
 conn.commit()
 cur.close()
