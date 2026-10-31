@@ -23,7 +23,8 @@ with open(os.path.join(BASE_DIR, "schema.sql"), "r") as f:
     cur.execute(schema)
     
 print("Loading 5K citizen records...")
-seed_file = os.path.join(BASE_DIR, "..", "seed", "seed_5k.sql")
+seed_file = os.path.join(BASE_DIR, "seed_5k.sql")
+print(f"Looking for seed file at: {seed_file}")
 if os.path.exists(seed_file):
     with open(seed_file, "r", encoding="utf-8") as f:
         seed_data = f.read()
