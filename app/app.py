@@ -56,6 +56,11 @@ except Exception:
 
 
 def get_db():
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        return psycopg2.connect(db_url)
     return psycopg2.connect(
         host=os.environ.get("DATABASE_HOST", config.get("database", "host")),
         port=os.environ.get("DATABASE_PORT", config.get("database", "port")),
