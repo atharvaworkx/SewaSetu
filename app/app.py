@@ -126,16 +126,32 @@ def about():
 @app.route("/__gateway/", defaults={"subpath": ""})
 @app.route("/__gateway/<path:subpath>")
 def gateway_proxy(subpath):
-    # Convenience proxy to the internal SMS gateway, so the OTP inbox is reachable
-    # on the main site without opening a second port on the host. The gateway
-    # itself runs only on the internal network.
-    try:
-        r = requests.get(SMS_GATEWAY_URL + "/" + subpath,
-                         params=request.args, timeout=5)
-        return (r.content, r.status_code,
-                {"Content-Type": r.headers.get("Content-Type", "text/html")})
-    except Exception as e:
-        return ("SMS gateway unreachable: %s" % e, 502)
+    if not subpath or subpath == "":
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT mobile, code, created_at FROM otps ORDER BY id DESC LIMIT 50")
+        otps = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        html = """<!doctype html><html><head><title>SMS Gateway Console (Mock)</title>
+        <meta http-equiv="refresh" content="5">
+        <style>
+        body{font-family:Arial,sans-serif;margin:24px;background:#f4f4f4}
+        h2{color:#1a3c6e} table{border-collapse:collapse;background:#fff;width:100%}
+        td,th{border:1px solid #ccc;padding:6px 10px;font-size:14px;text-align:left}
+        </style></head><body>
+        <h2>SMS Gateway Console (Mock for Render Deployment)</h2>
+        <p>Recent OTPs sent. Auto-refreshes every 5s.</p>
+        <table><tr><th>Mobile</th><th>OTP Code</th><th>Sent At</th></tr>"""
+        
+        for mobile, code, created_at in otps:
+            html += f"<tr><td>{mobile}</td><td><strong>{code}</strong></td><td>{created_at}</td></tr>"
+        
+        html += "</table></body></html>"
+        return html
+    
+    return ("SMS gateway endpoint not implemented for this path", 404)
 
 
 # ---------------------------------------------------------------------------
