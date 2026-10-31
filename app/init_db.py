@@ -17,9 +17,20 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
+print("Creating tables...")
 with open(os.path.join(BASE_DIR, "schema.sql"), "r") as f:
     schema = f.read()
     cur.execute(schema)
+    
+print("Loading 5K citizen records...")
+seed_file = os.path.join(BASE_DIR, "..", "seed", "seed_5k.sql")
+if os.path.exists(seed_file):
+    with open(seed_file, "r", encoding="utf-8") as f:
+        seed_data = f.read()
+        cur.execute(seed_data)
+    print("✅ Loaded 5000 records (3000 approved, 1000 rejected, 1000 pending)")
+else:
+    print("⚠️  seed_5k.sql not found, skipping seed data")
 
 conn.commit()
 cur.close()
